@@ -1,0 +1,39 @@
+<Window x:Class="DtmToolbox.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="DTM Toolbox for BLE"
+        Width="1200" Height="760" MinWidth="960" MinHeight="600"
+        WindowStartupLocation="CenterScreen"
+        FontFamily="Segoe UI" FontSize="13"
+        Background="{StaticResource Gray50Brush}">
+
+    <!-- Window shell: side panel, tab strip, main pane and log pane. Contents arrive with the views. -->
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="260" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="48" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="200" />
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Grid.RowSpan="3" Grid.Column="0"
+                Background="{StaticResource Gray50Brush}"
+                BorderBrush="{StaticResource Gray200Brush}" BorderThickness="0,0,1,0" />
+
+        <Border Grid.Row="0" Grid.Column="1"
+                Background="{StaticResource WhiteBrush}"
+                BorderBrush="{StaticResource Gray200Brush}" BorderThickness="0,0,0,1" />
+
+        <Border Grid.Row="1" Grid.Column="1" Background="{StaticResource Gray50Brush}">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="DTM Toolbox for BLE" FontSize="22" Foreground="{StaticResource Gray600Brush}" HorizontalAlignment="Center" />
+                <TextBlock x:Name="VersionText" Foreground="{StaticResource Gray400Brush}" HorizontalAlignment="Center" Margin="0,6,0,0" />
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="2" Grid.Column="1" Background="{StaticResource Gray900Brush}" />
+    </Grid>
+</Window>
