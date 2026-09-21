@@ -14,11 +14,11 @@ public sealed class TestPlan
 {
     public TestMode Mode { get; set; } = TestMode.Transmitter;
 
-    /// <summary>First RF channel, 0 to 39. A plan with the same first and last channel stays on it.</summary>
-    public int FirstChannel { get; set; } = 17;
+    /// <summary>First RF channel, 0 to 39. Default 19, 2440 MHz. A plan with the same first and last channel stays on it.</summary>
+    public int FirstChannel { get; set; } = 19;
 
     /// <summary>Last RF channel of a sweep, 0 to 39.</summary>
-    public int LastChannel { get; set; } = 17;
+    public int LastChannel { get; set; } = 19;
 
     /// <summary>Time spent on each channel of a sweep, in milliseconds.</summary>
     public int DwellTimeMs { get; set; } = 30;
