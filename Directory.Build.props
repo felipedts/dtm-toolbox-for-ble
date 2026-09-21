@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>0.1.0</Version>
+    <Version>1.0.0</Version>
     <Product>DTM Toolbox for BLE</Product>
     <AssemblyTitle>DTM Toolbox for BLE</AssemblyTitle>
     <Description>Bluetooth LE Direct Test Mode over 2-wire UART</Description>
