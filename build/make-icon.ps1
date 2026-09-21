@@ -3,7 +3,7 @@
 Renders the application icon and packs it into src\DtmToolbox\Resources\app.ico.
 
 .DESCRIPTION
-The icon is drawn with GDI+ at every size the shell uses (16 to 256 px) and stored as
+The icon (five bars of a channel chart on a rounded square) is drawn with GDI+ at every size the shell uses (16 to 256 px) and stored as
 PNG-compressed entries, which Windows Vista and later read directly. This script is the
 only source of the artwork; run it again after changing the geometry or the colors.
 
@@ -23,14 +23,15 @@ Add-Type -AssemblyName System.Drawing
 
 $sizes = 16, 20, 24, 32, 40, 48, 64, 128, 256
 
-# Geometry on a 256 px canvas: rounded square background, one dot and three arcs above it.
+# Geometry on a 256 px canvas: rounded square background and five bars on a common baseline,
+# the channel chart of the application reduced to a glyph.
 $cornerRadius = 56
 $accent = [System.Drawing.Color]::FromArgb(255, 0x00, 0xAC, 0xC1)
-$centerX = 128
-$centerY = 184
-$arcRadii = 52, 92, 132
-$strokeWidth = 22
-$dotRadius = 16
+$barWidth = 26
+$barGap = 14
+$barHeights = 64, 118, 160, 96, 44
+$baseline = 204
+$barRadius = 6
 
 function New-RoundedRectangle([float]$size, [float]$radius) {
     $path = New-Object System.Drawing.Drawing2D.GraphicsPath
@@ -39,6 +40,21 @@ function New-RoundedRectangle([float]$size, [float]$radius) {
     $path.AddArc($size - $d, 0, $d, $d, 270, 90)
     $path.AddArc($size - $d, $size - $d, $d, $d, 0, 90)
     $path.AddArc(0, $size - $d, $d, $d, 90, 90)
+    $path.CloseFigure()
+    return $path
+}
+
+function New-RoundedBar([float]$x, [float]$y, [float]$width, [float]$height, [float]$radius) {
+    $r = [Math]::Min($radius, [Math]::Min($width, $height) / 2)
+    $path = New-Object System.Drawing.Drawing2D.GraphicsPath
+    if ($r -lt 0.5) {
+        $path.AddRectangle((New-Object System.Drawing.RectangleF $x, $y, $width, $height))
+        return $path
+    }
+    $d = $r * 2
+    $path.AddArc($x, $y, $d, $d, 180, 90)
+    $path.AddArc($x + $width - $d, $y, $d, $d, 270, 90)
+    $path.AddLine($x + $width, $y + $height, $x, $y + $height)
     $path.CloseFigure()
     return $path
 }
@@ -56,17 +72,13 @@ function Render-Icon([int]$size) {
         $brush = New-Object System.Drawing.SolidBrush $accent
         $g.FillPath($brush, $background)
 
-        $pen = New-Object System.Drawing.Pen ([System.Drawing.Color]::White), ($strokeWidth * $scale)
-        $pen.StartCap = [System.Drawing.Drawing2D.LineCap]::Round
-        $pen.EndCap = [System.Drawing.Drawing2D.LineCap]::Round
-        $cx = $centerX * $scale
-        $cy = $centerY * $scale
-        foreach ($radius in $arcRadii) {
-            $r = $radius * $scale
-            $g.DrawArc($pen, $cx - $r, $cy - $r, 2 * $r, 2 * $r, 225, 90)
+        $total = ($barWidth * $barHeights.Count) + ($barGap * ($barHeights.Count - 1))
+        $x = (256 - $total) / 2
+        foreach ($height in $barHeights) {
+            $bar = New-RoundedBar ($x * $scale) (($baseline - $height) * $scale) ($barWidth * $scale) ($height * $scale) ($barRadius * $scale)
+            $g.FillPath([System.Drawing.Brushes]::White, $bar)
+            $x += $barWidth + $barGap
         }
-        $dot = $dotRadius * $scale
-        $g.FillEllipse([System.Drawing.Brushes]::White, $cx - $dot, $cy - $dot, 2 * $dot, 2 * $dot)
     }
     finally {
         $g.Dispose()
