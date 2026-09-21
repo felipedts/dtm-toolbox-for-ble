@@ -7,10 +7,8 @@
             <Border Background="{StaticResource WhiteBrush}" Padding="24" Margin="0,0,0,16">
                 <StackPanel>
                     <TextBlock Text="DTM Toolbox for BLE" FontSize="20" Foreground="{StaticResource Gray800Brush}" />
-                    <TextBlock Margin="0,4,0,0" Foreground="{StaticResource Gray500Brush}">
-                        <Run Text="Version" />
-                        <Run Text="{Binding ProductVersion, Mode=OneWay}" />
-                    </TextBlock>
+                    <TextBox Style="{StaticResource SelectableText}" Margin="0,4,0,0" Foreground="{StaticResource Gray500Brush}"
+                             Text="{Binding ProductVersion, Mode=OneWay, StringFormat=Version {0}}" />
                     <TextBlock Margin="0,14,0,0" TextWrapping="Wrap" Foreground="{StaticResource Gray800Brush}"
                                Text="Bluetooth LE Direct Test Mode over the 2-wire UART interface (Bluetooth Core Specification, Vol 6, Part F)." />
                     <TextBlock Margin="0,14,0,0" Foreground="{StaticResource Gray800Brush}" Text="MIT License. Copyright (c) 2026 Felipe Dantas da Silva." />
@@ -36,7 +34,7 @@
             <Border Background="{StaticResource WhiteBrush}" Padding="24">
                 <StackPanel>
                     <TextBlock Style="{StaticResource GroupHeading}" Margin="0,0,0,10" Text="DEVICE" />
-                    <TextBlock TextWrapping="Wrap" Foreground="{StaticResource Gray800Brush}" Text="{Binding DeviceSummary}" />
+                    <TextBox Style="{StaticResource SelectableText}" Foreground="{StaticResource Gray800Brush}" Text="{Binding DeviceSummary, Mode=OneWay}" />
                 </StackPanel>
             </Border>
 

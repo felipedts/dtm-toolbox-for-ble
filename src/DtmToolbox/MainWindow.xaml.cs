@@ -1,7 +1,9 @@
 using System;
 using System.ComponentModel;
+using System.Linq;
 using System.Windows;
 using DtmToolbox.Serial;
+using DtmToolbox.Settings;
 using DtmToolbox.ViewModels;
 using Microsoft.Win32;
 
@@ -39,6 +41,8 @@ public partial class MainWindow : Window
             _viewModel.RefreshPorts();
         }
     }
+
+    private void OnCopyLogClick(object sender, RoutedEventArgs e) => LogView.CopyAll();
 
     private string? AskLogFilePath()
     {

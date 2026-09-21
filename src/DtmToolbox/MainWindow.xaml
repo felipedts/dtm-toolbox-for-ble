@@ -30,6 +30,7 @@
                 </StackPanel>
                 <StackPanel Orientation="Horizontal">
                     <Button Style="{StaticResource BarButton}" Content="CLEAR LOG" Command="{Binding ClearLogCommand}" />
+                    <Button Style="{StaticResource BarButton}" Content="COPY LOG" Click="OnCopyLogClick" />
                     <Button Style="{StaticResource BarButton}" Content="SAVE LOG" Command="{Binding SaveLogCommand}" />
                 </StackPanel>
             </DockPanel>
@@ -49,7 +50,7 @@
         </Border>
 
         <!-- Log -->
-        <views:LogPane DockPanel.Dock="Bottom" Height="190"
+        <views:LogPane x:Name="LogView" DockPanel.Dock="Bottom" Height="190"
                        Visibility="{Binding ShowLog, Converter={StaticResource BoolToVisibility}}" />
 
         <!-- Chart or about -->

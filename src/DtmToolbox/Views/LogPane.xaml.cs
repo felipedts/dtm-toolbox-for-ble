@@ -1,7 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Linq;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Threading;
 using DtmToolbox.ViewModels;
 
@@ -16,7 +20,11 @@ public partial class LogPane : UserControl
     {
         InitializeComponent();
         DataContextChanged += OnDataContextChanged;
+        LogList.CommandBindings.Add(new CommandBinding(ApplicationCommands.Copy, OnCopy, OnCanCopy));
     }
+
+    /// <summary>Copies every line of the log to the clipboard.</summary>
+    public void CopyAll() => CopyToClipboard(LogList.Items.OfType<LogEntry>());
 
     private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
@@ -54,6 +62,35 @@ public partial class LogPane : UserControl
         if (count > 0 && _viewModel != null && _viewModel.AutoScrollLog)
         {
             LogList.ScrollIntoView(LogList.Items[count - 1]);
+        }
+    }
+
+    private void OnCanCopy(object sender, CanExecuteRoutedEventArgs e) => e.CanExecute = LogList.SelectedItems.Count > 0;
+
+    private void OnCopy(object sender, ExecutedRoutedEventArgs e)
+    {
+        // SelectedItems comes in click order. The log order is the order of Items.
+        var selected = new HashSet<object>(LogList.SelectedItems.Cast<object>());
+        CopyToClipboard(LogList.Items.OfType<LogEntry>().Where(entry => selected.Contains(entry)));
+    }
+
+    private void OnCopyAllClick(object sender, RoutedEventArgs e) => CopyAll();
+
+    private static void CopyToClipboard(IEnumerable<LogEntry> entries)
+    {
+        string text = string.Join(Environment.NewLine, entries.Select(entry => entry.ToString()));
+        if (text.Length == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            Clipboard.SetDataObject(text, copy: true);
+        }
+        catch (ExternalException)
+        {
+            // Another program holds the clipboard open. Copying again works once it lets go.
         }
     }
 }

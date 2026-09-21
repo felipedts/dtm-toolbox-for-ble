@@ -102,6 +102,24 @@
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
+    <!-- Text that can be selected and copied: a read-only text box that looks like a text block -->
+
+    <Style x:Key="SelectableText" TargetType="TextBox">
+        <Setter Property="IsReadOnly" Value="True" />
+        <Setter Property="IsTabStop" Value="False" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TextBox">
+                    <ScrollViewer x:Name="PART_ContentHost" Margin="-2,0" />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- Number typed inline with its label: only an underline, no box -->
 
     <Style x:Key="InlineNumberBox" TargetType="TextBox">
