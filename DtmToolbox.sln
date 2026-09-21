@@ -7,6 +7,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{5EC68A9D-896
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DtmToolbox", "src\DtmToolbox\DtmToolbox.csproj", "{84318CDB-DE31-4AE1-9D68-AE07E7663729}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{1E5C94B2-C5B5-40CF-B5EF-0DE4A9570E85}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DtmToolbox.Tests", "tests\DtmToolbox.Tests\DtmToolbox.Tests.csproj", "{8CFD46D5-BF07-48D2-81D5-9EF9544FE19B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,8 +24,13 @@ Global
 		{84318CDB-DE31-4AE1-9D68-AE07E7663729}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{84318CDB-DE31-4AE1-9D68-AE07E7663729}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{84318CDB-DE31-4AE1-9D68-AE07E7663729}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8CFD46D5-BF07-48D2-81D5-9EF9544FE19B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8CFD46D5-BF07-48D2-81D5-9EF9544FE19B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8CFD46D5-BF07-48D2-81D5-9EF9544FE19B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8CFD46D5-BF07-48D2-81D5-9EF9544FE19B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{84318CDB-DE31-4AE1-9D68-AE07E7663729} = {5EC68A9D-896D-4DAB-9E82-89A8322E0901}
+		{8CFD46D5-BF07-48D2-81D5-9EF9544FE19B} = {1E5C94B2-C5B5-40CF-B5EF-0DE4A9570E85}
 	EndGlobalSection
 EndGlobal
