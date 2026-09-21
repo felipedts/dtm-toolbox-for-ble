@@ -1,0 +1,42 @@
+name: Release
+
+# A tag like v1.0.0 builds the installer and the portable archive and opens a draft release with them.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: ./build/install-innosetup.ps1 -AllUsers
+
+      - name: Build, test and pack
+        shell: pwsh
+        run: ./build/build.ps1 -Version ("${{ github.ref_name }}".TrimStart('v'))
+
+      - name: Draft release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $version = $tag.TrimStart('v')
+          # Release notes: the section of this version in the changelog.
+          $changelog = Get-Content CHANGELOG.md -Raw
+          $pattern = "(?ms)^## \[$([regex]::Escape($version))\][^\n]*\n(.*?)(?=^## \[|\z)"
+          $notes = if ($changelog -match $pattern) { $Matches[1].Trim() } else { "See CHANGELOG.md." }
+          Set-Content -Path notes.md -Value $notes -Encoding utf8
+          $files = Get-ChildItem artifacts -File | ForEach-Object { $_.FullName }
+          gh release create $tag @files --draft --title "DTM Toolbox for BLE $version" --notes-file notes.md
