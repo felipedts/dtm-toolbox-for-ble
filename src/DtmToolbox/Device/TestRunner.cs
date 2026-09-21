@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using DtmToolbox.Protocol;
@@ -98,7 +99,7 @@ public sealed class TestRunner
         {
             if (plan.TransmitPowerDbm is int dbm)
             {
-                power = _device.SetTransmitPower(dbm);
+                power = SetTransmitPower(plan, dbm);
                 progress?.Report(TestProgress.PowerApplied(power.Value));
             }
 
@@ -108,6 +109,55 @@ public sealed class TestRunner
         _device.SetModulationIndex(plan.ModulationIndex);
         _device.SetPhy(plan.Phy);
         return power;
+    }
+
+    // The specification command comes first: it takes any level, applies the nearest one the
+    // radio has and reports it. Firmware older than Bluetooth 5.2 rejects it. Nordic firmware of
+    // that age has a vendor command instead, which takes only the exact levels of its radio, so
+    // the levels around the request are tried, nearest first and the lower one before the higher.
+    private TransmitPowerReport SetTransmitPower(TestPlan plan, int dbm)
+    {
+        try
+        {
+            return _device.SetTransmitPower(dbm);
+        }
+        catch (DtmCommandRejectedException) when (plan.VendorProfile == VendorProfile.NordicNrf5x)
+        {
+            // No setup command in this firmware. The vendor command is next.
+        }
+
+        foreach (int level in NearestLevels(dbm, NordicVendorCommand.MinTransmitPowerDbm, NordicVendorCommand.MaxTransmitPowerDbm))
+        {
+            try
+            {
+                _device.SetVendorTransmitPower(level);
+                return TransmitPowerReport.FromVendorLevel(level);
+            }
+            catch (DtmCommandRejectedException)
+            {
+                // The radio does not have this level.
+            }
+        }
+
+        throw new DtmException("The device accepted neither the transmit power setup command (0x09) nor the Nordic vendor command.");
+    }
+
+    private static IEnumerable<int> NearestLevels(int requested, int minimum, int maximum)
+    {
+        int start = Math.Max(minimum, Math.Min(maximum, requested));
+        yield return start;
+        for (int distance = 1; start - distance >= minimum || start + distance <= maximum; distance++)
+        {
+            if (start - distance >= minimum)
+            {
+                yield return start - distance;
+            }
+
+            if (start + distance <= maximum)
+            {
+                yield return start + distance;
+            }
+        }
     }
 
     private void StartTest(TestPlan plan, int channel)

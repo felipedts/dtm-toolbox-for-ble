@@ -132,6 +132,26 @@ public class DtmCommandTests
         Assert.Equal(0x9103, NordicVendorCommand.ConstantCarrier(17).Value);
     }
 
+    [Theory]
+    [InlineData(0, 0x800B)]
+    [InlineData(4, 0x840B)]
+    [InlineData(8, 0x880B)]
+    [InlineData(-4, 0xBC0B)]
+    [InlineData(-20, 0xAC0B)]
+    [InlineData(-40, 0x980B)]
+    public void NordicSetTransmitPower_PutsTheLevelInSixBitsOfTheChannelFieldWithVendorCommandTwo(int dbm, int expected)
+    {
+        Assert.Equal(expected, NordicVendorCommand.SetTransmitPower(dbm).Value);
+    }
+
+    [Theory]
+    [InlineData(16)]
+    [InlineData(-49)]
+    public void NordicSetTransmitPower_RejectsLevelsThatSixBitsCannotCarry(int dbm)
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => NordicVendorCommand.SetTransmitPower(dbm));
+    }
+
     [Fact]
     public void Frame_GoesOnTheWireMostSignificantByteFirst()
     {

@@ -75,3 +75,12 @@ Nordic Semiconductor nRF5x DTM firmware, on LE 1M or LE 2M: a transmitter test c
 | Length field | Command | Channel field |
 |---|---|---|
 | `0` | Constant carrier, unmodulated, until test end | RF channel |
+| `2` | Transmit power | Level in dBm in 6 bits, -48 to +15. The firmware reads it as negative when bit 5 or bit 4 is set, and rejects a level its radio does not have |
+
+## Transmit power
+
+The setup command `0x09` is tried first. It takes any level, applies the nearest one the radio has and reports it.
+
+Firmware that predates Bluetooth 5.2 rejects that command. With the Nordic nRF5x vendor profile the vendor command is tried next, with the requested level and then with the levels around it, nearest first and the lower one before the higher, until the device accepts one. The accepted level is the one reported in the log and in the chart.
+
+The run stops with an error when the device accepts neither command, or when it rejects `0x09` and the vendor profile is generic.

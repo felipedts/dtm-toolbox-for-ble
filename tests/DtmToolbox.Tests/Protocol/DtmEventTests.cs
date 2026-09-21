@@ -59,7 +59,7 @@ public class DtmEventTests
     [Fact]
     public void TransmitPowerReport_ReadsAPositiveLevelAtTheDeviceMaximum()
     {
-        var report = new TransmitPowerReport(new DtmEvent(new DtmFrame(0x04, 0x10)).Response);
+        TransmitPowerReport report = TransmitPowerReport.FromResponse(new DtmEvent(new DtmFrame(0x04, 0x10)).Response);
 
         Assert.Equal(8, report.LevelDbm);
         Assert.True(report.AtMaximum);
@@ -69,7 +69,7 @@ public class DtmEventTests
     [Fact]
     public void TransmitPowerReport_ReadsANegativeLevelAtTheDeviceMinimum()
     {
-        var report = new TransmitPowerReport(new DtmEvent(new DtmFrame(0x03, 0xB0)).Response);
+        TransmitPowerReport report = TransmitPowerReport.FromResponse(new DtmEvent(new DtmFrame(0x03, 0xB0)).Response);
 
         Assert.Equal(-40, report.LevelDbm);
         Assert.True(report.AtMinimum);

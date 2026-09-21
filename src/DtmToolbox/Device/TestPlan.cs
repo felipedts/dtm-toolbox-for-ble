@@ -40,6 +40,9 @@ public sealed class TestPlan
     /// <summary>Transmit an unmodulated carrier (Nordic nRF5x vendor command) instead of packets.</summary>
     public bool ConstantCarrier { get; set; }
 
+    /// <summary>Vendor commands the run may use besides the ones of the specification.</summary>
+    public VendorProfile VendorProfile { get; set; } = VendorProfile.Generic;
+
     public bool IsSweep => LastChannel != FirstChannel;
 
     /// <exception cref="ArgumentException">A value is out of range or a combination is not valid.</exception>
@@ -76,6 +79,11 @@ public sealed class TestPlan
         if (ConstantCarrier && (Mode != TestMode.Transmitter || codedPhy))
         {
             throw new ArgumentException("The constant carrier is a transmitter test on the LE 1M or LE 2M PHY.");
+        }
+
+        if (ConstantCarrier && VendorProfile != VendorProfile.NordicNrf5x)
+        {
+            throw new ArgumentException("The constant carrier is a Nordic nRF5x vendor command.");
         }
 
         if (!ConstantCarrier && Mode == TestMode.Transmitter && PacketType == PacketType.Pattern11111111 && !codedPhy)

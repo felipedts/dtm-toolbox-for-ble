@@ -96,7 +96,14 @@ public class TestRunnerTests
         var link = new FakeLink();
         using var stop = new CancellationTokenSource();
         var runner = new TestRunner(new DtmDevice(link), StopAfterWaits(stop, 1));
-        var plan = new TestPlan { ConstantCarrier = true, FirstChannel = 17, LastChannel = 17, TransmitPowerDbm = null };
+        var plan = new TestPlan
+        {
+            ConstantCarrier = true,
+            VendorProfile = VendorProfile.NordicNrf5x,
+            FirstChannel = 17,
+            LastChannel = 17,
+            TransmitPowerDbm = null,
+        };
 
         await runner.RunAsync(plan, null, stop.Token);
 
@@ -148,7 +155,8 @@ public class TestRunnerTests
         var runner = new TestRunner(new DtmDevice(link));
 
         await Assert.ThrowsAsync<ArgumentException>(() => runner.RunAsync(new TestPlan { FirstChannel = 10, LastChannel = 5 }, null, CancellationToken.None));
-        await Assert.ThrowsAsync<ArgumentException>(() => runner.RunAsync(new TestPlan { ConstantCarrier = true, Phy = Phy.LeCodedS8 }, null, CancellationToken.None));
+        await Assert.ThrowsAsync<ArgumentException>(() => runner.RunAsync(new TestPlan { ConstantCarrier = true, VendorProfile = VendorProfile.NordicNrf5x, Phy = Phy.LeCodedS8 }, null, CancellationToken.None));
+        await Assert.ThrowsAsync<ArgumentException>(() => runner.RunAsync(new TestPlan { ConstantCarrier = true, VendorProfile = VendorProfile.Generic }, null, CancellationToken.None));
         await Assert.ThrowsAsync<ArgumentException>(() => runner.RunAsync(new TestPlan { PacketType = PacketType.Pattern11111111 }, null, CancellationToken.None));
 
         Assert.Empty(link.Commands);

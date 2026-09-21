@@ -33,8 +33,15 @@ public sealed class DtmDevice : IDisposable
     public TransmitPowerReport SetTransmitPower(int dbm)
     {
         DtmEvent response = Send("Set transmit power " + dbm + " dBm", DtmCommand.SetTransmitPower(dbm));
-        return new TransmitPowerReport(response.Response);
+        return TransmitPowerReport.FromResponse(response.Response);
     }
+
+    /// <summary>
+    /// Nordic nRF5x vendor command, for firmware without the setup command. The device rejects
+    /// a level its radio does not have.
+    /// </summary>
+    public void SetVendorTransmitPower(int dbm) =>
+        Send("Set transmit power " + dbm + " dBm (Nordic vendor command)", NordicVendorCommand.SetTransmitPower(dbm));
 
     public DtmFeatures ReadFeatures() =>
         (DtmFeatures)Send("Read features", DtmCommand.ReadFeatures()).Response;
@@ -51,19 +58,26 @@ public sealed class DtmDevice : IDisposable
     }
 
     public void StartReceiver(int channel) =>
-        Send("Receiver test, channel " + channel, DtmCommand.ReceiverTest(channel));
+        Send("Receiver test, " + Describe(channel), DtmCommand.ReceiverTest(channel));
 
     public void StartTransmitter(int channel, int payloadLength, PacketType packetType) =>
-        Send("Transmitter test, channel " + channel, DtmCommand.TransmitterTest(channel, payloadLength, packetType));
+        Send("Transmitter test, " + Describe(channel), DtmCommand.TransmitterTest(channel, payloadLength, packetType));
 
     /// <summary>Nordic nRF5x vendor command: unmodulated carrier until the test is ended.</summary>
     public void StartConstantCarrier(int channel) =>
-        Send("Constant carrier, channel " + channel, NordicVendorCommand.ConstantCarrier(channel));
+        Send("Constant carrier, " + Describe(channel), NordicVendorCommand.ConstantCarrier(channel));
 
     /// <summary>Ends the running test and returns the packets received, zero after a transmitter test.</summary>
     public int EndTest() => Send("Test end", DtmCommand.TestEnd()).PacketCount;
 
     public void Dispose() => _link.Dispose();
+
+    // Test commands number channels by frequency. The frequency keeps the text unambiguous next to
+    // the link layer channel index that user interfaces show.
+    private static string Describe(int channel) =>
+        channel >= DtmChannel.Min && channel <= DtmChannel.Max
+            ? "RF channel " + channel + " (" + DtmChannel.FrequencyMhz(channel) + " MHz)"
+            : "RF channel " + channel;
 
     private DtmEvent Send(string operation, DtmFrame command)
     {

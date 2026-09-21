@@ -42,6 +42,11 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     private const int MaxLogEntries = 2000;
     private const int LogTrimCount = 200;
+    private const string SimulatedCurrentPort = "SIM-CURRENT";
+    private const string SimulatedLegacyPort = "SIM-LEGACY";
+    private const string NoTransmitPowerCommandHelp =
+        "Firmware older than Bluetooth 5.2 does not have this command. For Nordic nRF5x firmware, select the " +
+        "Nordic nRF5x vendor extensions in the ABOUT tab.";
     private const string NoResponseHelp =
         "Check that the port is not open in another application, that the right serial port and baud rate are " +
         "selected, and that the device runs a Direct Test Mode firmware.";
@@ -50,6 +55,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private static readonly TimeSpan ShutdownWait = TimeSpan.FromSeconds(2);
 
     private readonly SettingsStore _store;
+    private readonly bool _simulate;
     private readonly ConcurrentQueue<Action> _pending = new ConcurrentQueue<Action>();
     private readonly DispatcherTimer _pump;
     private readonly int[] _received = new int[DtmChannel.Count];
@@ -95,9 +101,12 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     {
     }
 
-    public MainViewModel(SettingsStore store)
+    /// <param name="store">Where the settings are kept between runs.</param>
+    /// <param name="simulate">Adds two simulated devices to the port list and leaves the stored settings untouched.</param>
+    public MainViewModel(SettingsStore store, bool simulate = false)
     {
         _store = store;
+        _simulate = simulate;
         AppSettings settings = store.Load();
 
         BaudRates = new[] { 115200, 57600, 38400, 19200, 14400, 9600, 2400, 1200 };
@@ -494,7 +503,14 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public void RefreshPorts()
     {
         string? wanted = _selectedPort?.PortName ?? _preferredPortName;
-        IReadOnlyList<SerialPortInfo> found = SerialPortEnumerator.GetPorts();
+        var found = new List<SerialPortInfo>();
+        if (_simulate)
+        {
+            found.Add(new SerialPortInfo(SimulatedCurrentPort, "Simulated device (current firmware)"));
+            found.Add(new SerialPortInfo(SimulatedLegacyPort, "Simulated device (legacy firmware)"));
+        }
+
+        found.AddRange(SerialPortEnumerator.GetPorts());
 
         if (!found.SequenceEqual(Ports))
         {
@@ -522,7 +538,23 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         }
 
         _pump.Stop();
-        _store.Save(CurrentSettings());
+        if (!_simulate)
+        {
+            _store.Save(CurrentSettings());
+        }
+    }
+
+    private static IDtmLink OpenLink(string portName, int baudRate)
+    {
+        switch (portName)
+        {
+            case SimulatedCurrentPort:
+                return new SimulatedDtmLink(legacyFirmware: false);
+            case SimulatedLegacyPort:
+                return new SimulatedDtmLink(legacyFirmware: true);
+            default:
+                return new SerialDtmLink(portName, baudRate);
+        }
     }
 
     private static double[] EmptyValues()
@@ -605,6 +637,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             Phy = _phy.Value,
             PayloadLength = _payloadLength,
             TransmitPowerDbm = _transmitPowerDbm,
+            VendorProfile = _vendorProfile.Value,
         };
 
         switch (_payload.Value)
@@ -663,7 +696,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         try
         {
             AddLog(LogKind.Info, "Opening " + port.PortName + " at " + baudRate + " baud");
-            device = await Task.Run(() => new DtmDevice(new SerialDtmLink(port.PortName, baudRate)));
+            device = await Task.Run(() => new DtmDevice(OpenLink(port.PortName, baudRate)));
             device.FrameExchanged += OnFrameExchanged;
 
             AddLog(LogKind.Info, DescribePlan(plan));
@@ -736,7 +769,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     private string ReadDeviceSummary(string portName, int baudRate)
     {
-        using (var device = new DtmDevice(new SerialDtmLink(portName, baudRate)))
+        using (var device = new DtmDevice(OpenLink(portName, baudRate)))
         {
             device.FrameExchanged += OnFrameExchanged;
             device.Reset();
@@ -766,6 +799,11 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private void Fail(DtmException ex)
     {
         string message = ex is DtmTimeoutException ? "No response from the device. " + NoResponseHelp : ex.Message;
+        if (ex is DtmCommandRejectedException rejected && rejected.Command.High == (byte)SetupControl.SetTransmitPower)
+        {
+            message += " " + NoTransmitPowerCommandHelp;
+        }
+
         ErrorMessage = message;
         AddLog(LogKind.Error, ex.Message);
     }
@@ -803,22 +841,26 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _pending.Enqueue(() => Append(entry));
     }
 
-    private void OnProgress(TestProgress progress)
+    // "at" is when the worker thread reported, not when the UI got to it: log lines keep the order
+    // of their timestamps next to the raw frames.
+    private void OnProgress(TestProgress progress, DateTime at)
     {
         switch (progress.Kind)
         {
             case TestProgressKind.PowerApplied:
                 TransmitPowerReport power = progress.Power.GetValueOrDefault();
                 _appliedPowerDbm = power.LevelDbm;
-                string limit = power.AtMaximum ? " (device maximum)" : power.AtMinimum ? " (device minimum)" : string.Empty;
-                AddLog(LogKind.Info, "Transmit power applied: " + power.LevelDbm + " dBm" + limit);
+                string note = power.FromVendorCommand
+                    ? " (Nordic vendor command: the firmware has no setup command 0x09)"
+                    : power.AtMaximum ? " (device maximum)" : power.AtMinimum ? " (device minimum)" : string.Empty;
+                Append(new LogEntry(at, LogKind.Info, "Transmit power applied: " + power.LevelDbm + " dBm" + note));
                 break;
 
             case TestProgressKind.ChannelStarted:
                 _activeChannel = progress.Channel;
                 if (!_runningSweep)
                 {
-                    AddLog(LogKind.Info, "Test running on channel " + ChannelText(progress.Channel));
+                    Append(new LogEntry(at, LogKind.Info, "Test running on channel " + ChannelText(progress.Channel)));
                 }
 
                 break;
@@ -923,6 +965,10 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             _owner = owner;
         }
 
-        public void Report(TestProgress value) => _owner._pending.Enqueue(() => _owner.OnProgress(value));
+        public void Report(TestProgress value)
+        {
+            DateTime at = DateTime.Now;
+            _owner._pending.Enqueue(() => _owner.OnProgress(value, at));
+        }
     }
 }

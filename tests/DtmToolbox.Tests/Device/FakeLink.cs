@@ -20,6 +20,9 @@ internal sealed class FakeLink : IDtmLink
     /// <summary>Answers this command with an error status.</summary>
     public DtmFrame? RejectedCommand { get; set; }
 
+    /// <summary>Answers with an error status every command this function returns true for.</summary>
+    public Func<DtmFrame, bool>? RejectWhen { get; set; }
+
     /// <summary>Response to the transmit power command.</summary>
     public DtmFrame TransmitPowerResponse { get; set; } = new DtmFrame(0x0000);
 
@@ -44,7 +47,7 @@ internal sealed class FakeLink : IDtmLink
         {
             _commands.Add(command);
 
-            if (RejectedCommand.HasValue && RejectedCommand.Value == command)
+            if ((RejectedCommand.HasValue && RejectedCommand.Value == command) || (RejectWhen != null && RejectWhen(command)))
             {
                 return new DtmEvent(new DtmFrame(0x0001));
             }
