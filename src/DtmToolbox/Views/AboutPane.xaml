@@ -1,0 +1,45 @@
+<UserControl x:Class="DtmToolbox.Views.AboutPane"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="16">
+
+            <Border Background="{StaticResource WhiteBrush}" Padding="24" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="DTM Toolbox for BLE" FontSize="20" Foreground="{StaticResource Gray800Brush}" />
+                    <TextBlock Margin="0,4,0,0" Foreground="{StaticResource Gray500Brush}">
+                        <Run Text="Version" />
+                        <Run Text="{Binding ProductVersion, Mode=OneWay}" />
+                    </TextBlock>
+                    <TextBlock Margin="0,14,0,0" TextWrapping="Wrap" Foreground="{StaticResource Gray800Brush}"
+                               Text="Bluetooth LE Direct Test Mode over the 2-wire UART interface (Bluetooth Core Specification, Vol 6, Part F)." />
+                    <TextBlock Margin="0,14,0,0" Foreground="{StaticResource Gray800Brush}" Text="MIT License. Copyright (c) 2026 Felipe Dantas da Silva." />
+                    <TextBlock Margin="0,4,0,0">
+                        <Hyperlink NavigateUri="https://github.com/felipedts/dtm-toolbox-for-ble" RequestNavigate="OnRequestNavigate"
+                                   Foreground="{StaticResource AccentDarkBrush}">
+                            <Run Text="https://github.com/felipedts/dtm-toolbox-for-ble" />
+                        </Hyperlink>
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+
+            <Border Background="{StaticResource WhiteBrush}" Padding="24" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource GroupHeading}" Margin="0,0,0,10" Text="VENDOR EXTENSIONS" />
+                    <ComboBox Style="{StaticResource Dropdown}" Width="212" HorizontalAlignment="Left" IsEnabled="{Binding IsIdle}"
+                              ItemsSource="{Binding VendorProfiles}" SelectedItem="{Binding SelectedVendorProfile}" />
+                    <TextBlock Margin="0,10,0,0" TextWrapping="Wrap" Foreground="{StaticResource Gray500Brush}"
+                               Text="Commands outside the Bluetooth specification. Nordic nRF5x adds the constant carrier to the packet types of the transmitter, on the LE 1M and LE 2M PHY. Generic offers specification commands only." />
+                </StackPanel>
+            </Border>
+
+            <Border Background="{StaticResource WhiteBrush}" Padding="24">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource GroupHeading}" Margin="0,0,0,10" Text="DEVICE" />
+                    <TextBlock TextWrapping="Wrap" Foreground="{StaticResource Gray800Brush}" Text="{Binding DeviceSummary}" />
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

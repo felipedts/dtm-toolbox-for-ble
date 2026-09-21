@@ -1,0 +1,110 @@
+<UserControl x:Class="DtmToolbox.Views.SidePanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:DtmToolbox.Controls">
+    <DockPanel Background="{StaticResource Gray50Brush}">
+
+        <ComboBox DockPanel.Dock="Top" Style="{StaticResource PortDropdown}" Tag="SELECT PORT"
+                  ItemsSource="{Binding Ports}" SelectedItem="{Binding SelectedPort}" IsEnabled="{Binding IsIdle}" />
+
+        <Button DockPanel.Dock="Bottom" Margin="24,12,24,20" Style="{StaticResource StartButton}"
+                Command="{Binding StartStopCommand}" Content="{Binding StartStopText}"
+                Visibility="{Binding IsTestTab, Converter={StaticResource BoolToVisibility}}" />
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Margin="24,8,24,8" IsEnabled="{Binding IsIdle}">
+
+                <StackPanel Orientation="Horizontal">
+                    <Button Style="{StaticResource LinkButton}" Command="{Binding RefreshPortsCommand}" Content="Refresh ports" />
+                    <Button Style="{StaticResource LinkButton}" Command="{Binding IdentifyCommand}" Content="Identify device" Margin="16,0,0,0" />
+                </StackPanel>
+
+                <TextBlock Style="{StaticResource GroupHeading}" Text="BAUD RATE" Margin="0,14,0,10" />
+                <ComboBox Style="{StaticResource Dropdown}" ItemsSource="{Binding BaudRates}" SelectedItem="{Binding BaudRate}" />
+
+                <StackPanel Visibility="{Binding IsTestTab, Converter={StaticResource BoolToVisibility}}">
+
+                    <TextBlock Style="{StaticResource GroupHeading}" Text="CHANNEL MODE" />
+                    <Border Background="{StaticResource Gray700Brush}">
+                        <UniformGrid Columns="2">
+                            <RadioButton Style="{StaticResource Segment}" GroupName="ChannelMode" Content="Single" IsChecked="{Binding IsSingle}" />
+                            <RadioButton Style="{StaticResource Segment}" GroupName="ChannelMode" Content="Sweep" IsChecked="{Binding IsSweep}" />
+                        </UniformGrid>
+                    </Border>
+
+                    <TextBlock Style="{StaticResource GroupHeading}" Text="CHANNEL SETTINGS" />
+
+                    <!-- Single channel -->
+                    <StackPanel Visibility="{Binding IsSingle, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="{Binding ChannelLabel}" />
+                            <TextBox Style="{StaticResource InlineNumberBox}" controls:NumericInput.IsEnabled="True" Text="{Binding ChannelIndex}" />
+                        </StackPanel>
+                        <TextBlock Style="{StaticResource FieldHint}" Text="{Binding ChannelFrequencyText}" Margin="0,2,0,0" />
+                        <controls:TrackSlider Minimum="0" Maximum="39" Value="{Binding Channel}" Margin="0,4,0,10" />
+                    </StackPanel>
+
+                    <!-- Sweep -->
+                    <StackPanel Visibility="{Binding IsSweep, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="{Binding PeriodLabel}" />
+                            <TextBox Style="{StaticResource InlineNumberBox}" Width="56" controls:NumericInput.IsEnabled="True" Text="{Binding DwellTimeMs}" />
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="ms" />
+                        </StackPanel>
+                        <controls:TrackSlider Minimum="20" Maximum="20000" IsLogarithmic="True" Value="{Binding DwellTimeMs}" Margin="0,4,0,10" />
+
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="{Binding ChannelLabel}" />
+                            <TextBox Style="{StaticResource InlineNumberBox}" Width="30" controls:NumericInput.IsEnabled="True" Text="{Binding SweepFirstIndex}" />
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="to" />
+                            <TextBox Style="{StaticResource InlineNumberBox}" Width="30" controls:NumericInput.IsEnabled="True" Text="{Binding SweepLastIndex}" />
+                        </StackPanel>
+                        <TextBlock Style="{StaticResource FieldHint}" Text="{Binding SweepRangeText}" Margin="0,2,0,0" />
+                        <controls:TrackSlider Minimum="0" Maximum="39" IsRange="True"
+                                              Value="{Binding SweepFirstChannel}" UpperValue="{Binding SweepLastChannel}" Margin="0,4,0,10" />
+                    </StackPanel>
+
+                    <!-- Transmit power -->
+                    <StackPanel Visibility="{Binding IsTransmitterTab, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel Orientation="Horizontal"
+                                    ToolTip="Level requested with the transmit power setup command (0x09). A device that does not support it applies the nearest level it has, which is the one shown in the chart.">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="Transmit power" />
+                            <TextBox Style="{StaticResource InlineNumberBox}" controls:NumericInput.IsEnabled="True" Text="{Binding TransmitPowerDbm}" />
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="dBm" />
+                        </StackPanel>
+                        <controls:TrackSlider Minimum="-40" Maximum="20" Value="{Binding TransmitPowerDbm}" Margin="0,4,0,10" />
+                    </StackPanel>
+
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="Physical layer" Margin="0,0,0,6" />
+                    <ComboBox Style="{StaticResource Dropdown}" ItemsSource="{Binding PhyOptions}" SelectedItem="{Binding SelectedPhy}" Margin="0,0,0,12" />
+
+                    <!-- Packet -->
+                    <StackPanel Visibility="{Binding IsTransmitterTab, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="Packet type" Margin="0,0,0,6" />
+                        <ComboBox Style="{StaticResource Dropdown}" ItemsSource="{Binding PayloadOptions}" SelectedItem="{Binding SelectedPayload}" Margin="0,0,0,12" />
+
+                        <StackPanel Visibility="{Binding ShowPayloadLength, Converter={StaticResource BoolToVisibility}}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Style="{StaticResource FieldLabel}" Text="Packet length" />
+                                <TextBox Style="{StaticResource InlineNumberBox}" controls:NumericInput.IsEnabled="True" Text="{Binding PayloadLength}" />
+                                <TextBlock Style="{StaticResource FieldLabel}" Text="Bytes" />
+                            </StackPanel>
+                            <controls:TrackSlider Minimum="1" Maximum="255" Value="{Binding PayloadLength}" Margin="0,4,0,10" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Timeout -->
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="No timeout"
+                               Visibility="{Binding HasNoTimeout, Converter={StaticResource BoolToVisibility}}" />
+                    <StackPanel Orientation="Horizontal" Visibility="{Binding HasTimeout, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="Timeout after" />
+                        <TextBox Style="{StaticResource InlineNumberBox}" Width="30" controls:NumericInput.IsEnabled="True" Text="{Binding TimeoutSeconds}" />
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="s" />
+                    </StackPanel>
+                    <controls:TrackSlider Minimum="0" Maximum="20" Value="{Binding TimeoutSeconds}" Margin="0,4,0,4" />
+
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>
