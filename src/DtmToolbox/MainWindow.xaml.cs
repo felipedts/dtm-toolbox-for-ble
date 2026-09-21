@@ -18,7 +18,9 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
-        _viewModel = new MainViewModel { AskLogFilePath = AskLogFilePath };
+        // "--simulate" adds two devices that exist only in memory, to run the application without hardware.
+        bool simulate = Environment.GetCommandLineArgs().Any(argument => string.Equals(argument, "--simulate", StringComparison.OrdinalIgnoreCase));
+        _viewModel = new MainViewModel(new SettingsStore(), simulate) { AskLogFilePath = AskLogFilePath };
         DataContext = _viewModel;
 
         _deviceChanges = new DeviceChangeWatcher();
