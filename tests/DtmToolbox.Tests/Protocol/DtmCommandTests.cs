@@ -65,9 +65,11 @@ public class DtmCommandTests
 
     [Theory]
     [InlineData(0, 0x0900)]
+    [InlineData(4, 0x0904)]
     [InlineData(8, 0x0908)]
     [InlineData(20, 0x0914)]
     [InlineData(-4, 0x09FC)]
+    [InlineData(-20, 0x09EC)]
     [InlineData(-40, 0x09D8)]
     [InlineData(-127, 0x0981)]
     public void SetTransmitPower_SendsTheLevelAsASigned8BitParameter(int dbm, int expected)
