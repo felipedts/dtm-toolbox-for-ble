@@ -68,6 +68,12 @@ A sweep repeats steps 4 and 5 on each channel of the range, staying on a channel
 
 A receiver test on a single channel runs as one uninterrupted test until it is stopped. Restarting it to refresh the count would lose the packets sent during each restart, which matters when the count is compared with a fixed number of transmitted packets.
 
+## Timing of a sweep
+
+The time per channel runs from the answer to the test command until the test end command is sent, and is kept to about 1 ms. Windows wakes a waiting thread on a timer tick 15.6 ms apart by default, so the application asks for a 1 ms tick while a sweep runs and spins through the last stretch of each wait. When Windows does not grant the 1 ms tick, the wait is still right and uses more processor time.
+
+A full cycle adds the two exchanges, the test command and the test end. Each takes a few milliseconds, and up to 16 ms with a USB-to-serial adapter that holds received bytes for its latency timer, as FTDI adapters do by default.
+
 ## Vendor commands
 
 Nordic Semiconductor nRF5x DTM firmware, on LE 1M or LE 2M: a transmitter test command with packet type `11` is a vendor command. The length field selects the command and the channel field carries its argument.

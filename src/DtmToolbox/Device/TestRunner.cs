@@ -18,18 +18,22 @@ namespace DtmToolbox.Device;
 public sealed class TestRunner
 {
     private readonly DtmDevice _device;
-    private readonly Func<int, CancellationToken, Task> _delay;
+    private readonly Func<int, CancellationToken, Task>? _delay;
 
+    /// <summary>Runner whose sweep keeps the time per channel to about a millisecond, see <see cref="PreciseTimer"/>.</summary>
     public TestRunner(DtmDevice device)
-        : this(device, (milliseconds, token) => Task.Delay(milliseconds, token))
     {
+        _device = device ?? throw new ArgumentNullException(nameof(device));
     }
 
     /// <param name="device">Device to drive.</param>
-    /// <param name="delay">Waits the given milliseconds, or until the token is cancelled. -1 waits for the token only.</param>
+    /// <param name="delay">
+    /// Replaces the waits of the run: it waits the given milliseconds, or until the token is
+    /// cancelled, and -1 waits for the token only. For tests that must not depend on the clock.
+    /// </param>
     public TestRunner(DtmDevice device, Func<int, CancellationToken, Task> delay)
+        : this(device)
     {
-        _device = device ?? throw new ArgumentNullException(nameof(device));
         _delay = delay ?? throw new ArgumentNullException(nameof(delay));
     }
 
@@ -62,6 +66,9 @@ public sealed class TestRunner
             timeout.CancelAfter(plan.TimeoutMs);
         }
 
+        // A sweep spends tens of milliseconds on each channel, which the Windows timer tick alone cannot time.
+        using PreciseTimer? timer = plan.IsSweep && _delay == null ? new PreciseTimer() : null;
+
         int channel = plan.FirstChannel;
         while (!ending.IsCancellationRequested)
         {
@@ -71,7 +78,7 @@ public sealed class TestRunner
             int received;
             try
             {
-                await WaitAsync(plan.IsSweep ? plan.DwellTimeMs : Timeout.Infinite, ending.Token).ConfigureAwait(false);
+                await WaitAsync(plan.IsSweep ? plan.DwellTimeMs : Timeout.Infinite, ending.Token, timer).ConfigureAwait(false);
             }
             finally
             {
@@ -176,11 +183,19 @@ public sealed class TestRunner
         }
     }
 
-    private async Task WaitAsync(int milliseconds, CancellationToken token)
+    private async Task WaitAsync(int milliseconds, CancellationToken token, PreciseTimer? timer)
     {
+        if (_delay == null && timer != null && milliseconds != Timeout.Infinite)
+        {
+            // The run is on a worker thread of its own, so blocking it for the dwell time is fine.
+            timer.Wait(milliseconds, token);
+            return;
+        }
+
         try
         {
-            await _delay(milliseconds, token).ConfigureAwait(false);
+            Task wait = _delay != null ? _delay(milliseconds, token) : Task.Delay(milliseconds, token);
+            await wait.ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {
