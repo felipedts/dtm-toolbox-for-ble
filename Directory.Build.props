@@ -13,9 +13,9 @@
     <Product>DTM Toolbox for BLE</Product>
     <AssemblyTitle>DTM Toolbox for BLE</AssemblyTitle>
     <Description>Bluetooth LE Direct Test Mode over 2-wire UART</Description>
-    <Authors>Felipe Dantas</Authors>
-    <Company>Felipe Dantas</Company>
-    <Copyright>Copyright (c) 2026 Felipe Dantas</Copyright>
+    <Authors>Felipe Dantas da Silva</Authors>
+    <Company>Felipe Dantas da Silva</Company>
+    <Copyright>Copyright (c) 2026 Felipe Dantas da Silva</Copyright>
     <RepositoryUrl>https://github.com/felipedts/dtm-toolbox-for-ble</RepositoryUrl>
   </PropertyGroup>
 
